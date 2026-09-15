@@ -3,16 +3,24 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>SKYERA</title>
+    <title>SKYERA — 3D Disaster Response Drone Simulation</title>
     <style>
       :root {
-        --bg: #0b1220;
-        --panel: rgba(10, 16, 30, 0.88);
-        --line: rgba(170, 190, 230, 0.22);
-        --text: #e8eefc;
-        --muted: #9aabc8;
-        --ok: #6ddea5;
-        --idle: #d6b35c;
+        --bg: #090e17;
+        --panel: rgba(10, 17, 28, 0.88);
+        --panel-border: rgba(56, 189, 248, 0.25);
+        --accent: #38bdf8;
+        --accent-glow: rgba(56, 189, 248, 0.35);
+        --text: #e2e8f0;
+        --muted: #8493ad;
+        --ok: #34d399;
+        --warn: #fbbf24;
+        --danger: #f87171;
+        --font: "IBM Plex Mono", "SF Mono", "Menlo", "Courier New", monospace;
+      }
+
+      * {
+        box-sizing: border-box;
       }
 
       html,
@@ -24,69 +32,233 @@
         overflow: hidden;
         background: var(--bg);
         color: var(--text);
-        font-family: "IBM Plex Mono", "SF Mono", "Menlo", monospace;
+        font-family: var(--font);
+        user-select: none;
       }
 
-      #boot-panel {
+      /* Ground Control Station HUD Panel */
+      #gcs-panel {
         position: absolute;
-        z-index: 2;
-        top: 24px;
-        left: 24px;
-        width: min(420px, calc(100% - 48px));
-        padding: 20px 22px;
+        z-index: 10;
+        top: 20px;
+        left: 20px;
+        width: 380px;
+        max-width: calc(100vw - 40px);
         background: var(--panel);
-        border: 1px solid var(--line);
-        backdrop-filter: blur(8px);
+        border: 1px solid var(--panel-border);
+        box-shadow: 0 12px 36px rgba(0, 0, 0, 0.6), inset 0 0 16px rgba(56, 189, 248, 0.05);
+        backdrop-filter: blur(14px);
+        padding: 18px 20px;
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
       }
 
-      #boot-panel h1 {
+      .header-title {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+
+      .header-title h1 {
         margin: 0;
-        font-size: 28px;
-        letter-spacing: 0.18em;
+        font-size: 22px;
+        letter-spacing: 0.22em;
+        font-weight: 700;
+        color: #fff;
+      }
+
+      .uav-tag {
+        font-size: 11px;
+        background: rgba(56, 189, 248, 0.15);
+        border: 1px solid var(--accent);
+        color: var(--accent);
+        padding: 3px 8px;
+        letter-spacing: 0.12em;
         font-weight: 600;
       }
 
-      #boot-panel .subtitle {
-        margin: 6px 0 18px;
+      .subtitle {
+        margin: 0;
+        font-size: 10px;
         color: var(--muted);
-        font-size: 12px;
-        letter-spacing: 0.12em;
+        letter-spacing: 0.14em;
       }
 
-      #boot-panel h2 {
-        margin: 0 0 12px;
-        font-size: 11px;
-        letter-spacing: 0.16em;
+      .section-label {
+        font-size: 10px;
+        letter-spacing: 0.18em;
         color: var(--muted);
-        font-weight: 500;
-      }
-
-      .status-row {
+        text-transform: uppercase;
+        margin-top: 4px;
+        margin-bottom: 6px;
         display: flex;
-        justify-content: space-between;
-        gap: 16px;
-        padding: 6px 0;
-        font-size: 12px;
-        border-top: 1px solid rgba(170, 190, 230, 0.1);
+        align-items: center;
+        gap: 8px;
       }
 
-      .status-row:first-of-type {
-        border-top: none;
+      .section-label::after {
+        content: "";
+        flex: 1;
+        height: 1px;
+        background: rgba(132, 147, 173, 0.2);
       }
 
-      .status-ok {
+      /* Telemetry Grid */
+      .telemetry-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 8px;
+      }
+
+      .telemetry-card {
+        background: rgba(16, 26, 42, 0.8);
+        border: 1px solid rgba(56, 189, 248, 0.12);
+        padding: 8px 10px;
+        display: flex;
+        flex-direction: column;
+        gap: 3px;
+      }
+
+      .telemetry-label {
+        font-size: 9px;
+        color: var(--muted);
+        letter-spacing: 0.1em;
+      }
+
+      .telemetry-value {
+        font-size: 15px;
+        font-weight: 600;
+        color: #fff;
+      }
+
+      .mode-badge {
+        display: inline-block;
+        padding: 4px 10px;
+        font-size: 11px;
+        letter-spacing: 0.12em;
+        font-weight: 700;
+        border-radius: 2px;
+        text-align: center;
+      }
+
+      .mode-disarmed {
+        background: rgba(248, 113, 113, 0.15);
+        border: 1px solid var(--danger);
+        color: var(--danger);
+      }
+
+      .mode-active {
+        background: rgba(52, 211, 153, 0.15);
+        border: 1px solid var(--ok);
         color: var(--ok);
       }
 
-      .status-idle {
-        color: var(--idle);
+      .mode-nav {
+        background: rgba(56, 189, 248, 0.15);
+        border: 1px solid var(--accent);
+        color: var(--accent);
       }
 
-      .note {
-        margin-top: 16px;
+      /* Battery progress bar */
+      .battery-bar-container {
+        width: 100%;
+        height: 4px;
+        background: rgba(255, 255, 255, 0.1);
+        margin-top: 4px;
+        overflow: hidden;
+      }
+
+      .battery-bar-fill {
+        height: 100%;
+        width: 100%;
+        background: var(--ok);
+        transition: width 0.3s ease;
+      }
+
+      /* Action buttons */
+      .actions-container {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+        margin-top: 2px;
+      }
+
+      .btn {
+        font-family: var(--font);
         font-size: 11px;
+        letter-spacing: 0.1em;
+        font-weight: 600;
+        padding: 9px 12px;
+        border: 1px solid var(--panel-border);
+        background: rgba(20, 32, 52, 0.85);
+        color: #fff;
+        cursor: pointer;
+        transition: all 0.18s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+      }
+
+      .btn:hover {
+        background: rgba(56, 189, 248, 0.2);
+        border-color: var(--accent);
+        box-shadow: 0 0 12px var(--accent-glow);
+        transform: translateY(-1px);
+      }
+
+      .btn:active {
+        transform: translateY(1px);
+      }
+
+      .btn-primary {
+        background: rgba(56, 189, 248, 0.22);
+        border-color: var(--accent);
+        color: #e0f2fe;
+      }
+
+      .btn-danger {
+        border-color: rgba(248, 113, 113, 0.4);
+        color: var(--danger);
+      }
+
+      .btn-danger:hover {
+        background: rgba(248, 113, 113, 0.2);
+        border-color: var(--danger);
+        box-shadow: 0 0 12px rgba(248, 113, 113, 0.4);
+      }
+
+      /* Bottom Navigation Overlay */
+      #nav-hint {
+        position: absolute;
+        bottom: 20px;
+        left: 20px;
+        z-index: 10;
+        background: rgba(10, 17, 28, 0.8);
+        border: 1px solid rgba(56, 189, 248, 0.15);
+        backdrop-filter: blur(8px);
+        padding: 8px 14px;
+        font-size: 10px;
         color: var(--muted);
-        letter-spacing: 0.04em;
+        letter-spacing: 0.08em;
+        display: flex;
+        align-items: center;
+        gap: 16px;
+      }
+
+      #btn-reset-cam {
+        background: transparent;
+        border: 1px solid var(--panel-border);
+        color: var(--accent);
+        font-family: var(--font);
+        font-size: 10px;
+        padding: 4px 8px;
+        cursor: pointer;
+      }
+
+      #btn-reset-cam:hover {
+        background: rgba(56, 189, 248, 0.15);
       }
 
       canvas {
@@ -95,33 +267,63 @@
     </style>
   </head>
   <body>
-    <aside id="boot-panel" aria-label="SKYERA system status">
-      <h1>SKYERA</h1>
-      <p class="subtitle">DISASTER RESPONSE SIMULATION</p>
-      <h2>SYSTEM STATUS</h2>
-      <div class="status-row">
-        <span>Desktop Shell</span>
-        <span class="status-ok" id="status-shell">ONLINE</span>
+    <!-- Ground Control Station Overlay -->
+    <aside id="gcs-panel" aria-label="SKYERA Ground Control Station">
+      <div class="header-title">
+        <h1>SKYERA</h1>
+        <span class="uav-tag">UAV-01</span>
       </div>
-      <div class="status-row">
-        <span>Simulation Core</span>
-        <span class="status-ok" id="status-core">READY</span>
+      <p class="subtitle">3D DISASTER DRONE SIMULATION · PHASE 1</p>
+
+      <!-- Flight Telemetry -->
+      <div class="section-label">Flight Telemetry</div>
+      <div class="telemetry-grid">
+        <div class="telemetry-card">
+          <span class="telemetry-label">FLIGHT MODE</span>
+          <span class="mode-badge mode-disarmed" id="tele-mode">DISARMED</span>
+        </div>
+        <div class="telemetry-card">
+          <span class="telemetry-label">ALTITUDE (AGL)</span>
+          <span class="telemetry-value" id="tele-alt">0.0 m</span>
+        </div>
+        <div class="telemetry-card">
+          <span class="telemetry-label">GROUND SPEED</span>
+          <span class="telemetry-value" id="tele-speed">0.0 m/s</span>
+        </div>
+        <div class="telemetry-card">
+          <span class="telemetry-label">BATTERY LEVEL</span>
+          <span class="telemetry-value" id="tele-battery">100%</span>
+          <div class="battery-bar-container">
+            <div class="battery-bar-fill" id="tele-battery-bar"></div>
+          </div>
+        </div>
       </div>
-      <div class="status-row">
-        <span>Three.js Renderer</span>
-        <span class="status-idle" id="status-renderer">INITIALIZING</span>
+
+      <!-- Coordinates & Heading -->
+      <div class="telemetry-card" style="grid-column: span 2;">
+        <span class="telemetry-label">POSITION (X, Y, Z) · HEADING</span>
+        <span class="telemetry-value" id="tele-pos" style="font-size: 13px;">0.0, 0.0, 0.0 · 0°</span>
       </div>
-      <div class="status-row">
-        <span>Local Simulation Adapter</span>
-        <span class="status-ok" id="status-adapter">READY</span>
+
+      <!-- Flight Actions -->
+      <div class="section-label">Operator Flight Controls</div>
+      <div class="actions-container">
+        <button class="btn btn-primary" id="btn-takeoff">▲ TAKEOFF (8m)</button>
+        <button class="btn" id="btn-patrol">◈ PATROL WAYPOINTS</button>
+        <button class="btn" id="btn-land">▼ RETURN & LAND</button>
+        <button class="btn btn-danger" id="btn-arm">⚡ ARM / DISARM</button>
       </div>
-      <div class="status-row">
-        <span>Mission Systems</span>
-        <span class="status-idle">NOT INITIALIZED</span>
-      </div>
-      <p class="note">Phase 1A boot verification — mission implementation not started.</p>
     </aside>
+
+    <!-- Bottom Controls Hint -->
+    <div id="nav-hint">
+      <span>🖱 Orbit: Left Click Drag &nbsp;|&nbsp; Pan: Right Click Drag &nbsp;|&nbsp; Zoom: Scroll Wheel</span>
+      <button id="btn-reset-cam">Reset View</button>
+    </div>
+
+    <!-- 3D Three.js Viewport Host -->
     <div id="app"></div>
+
     <script type="module" src="/src/main.ts"></script>
   </body>
 </html>

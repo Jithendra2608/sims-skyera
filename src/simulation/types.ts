@@ -19,10 +19,24 @@ export interface Vec3 {
   readonly z: number;
 }
 
+export type FlightMode =
+  | "DISARMED"
+  | "LANDED"
+  | "TAKEOFF"
+  | "HOVER"
+  | "NAVIGATING"
+  | "LANDING";
+
 export interface DroneState {
   readonly position: Vec3;
+  readonly velocity: Vec3;
+  readonly speed: number;
   readonly headingRadians: number;
+  readonly pitchRadians: number;
+  readonly rollRadians: number;
   readonly armed: boolean;
+  readonly flightMode: FlightMode;
+  readonly targetPosition: Vec3 | null;
   readonly batteryPercent: number;
 }
 
@@ -75,7 +89,14 @@ export interface SimulationSnapshot {
 
 export interface SimulationCore {
   readonly getSnapshot: () => SimulationSnapshot;
-  /** Advance one fixed step. No domain side effects yet. */
+  /** Advance one fixed step. */
   readonly step: () => void;
   readonly reset: () => void;
+  /** Flight controls */
+  readonly arm: () => void;
+  readonly disarm: () => void;
+  readonly takeoff: (targetAltitude?: number) => void;
+  readonly flyTo: (target: Vec3) => void;
+  readonly land: () => void;
 }
+
