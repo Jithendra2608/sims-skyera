@@ -52,6 +52,8 @@
         display: flex;
         flex-direction: column;
         gap: 14px;
+        max-height: calc(100vh - 40px);
+        overflow-y: auto;
       }
 
       .header-title {
@@ -261,19 +263,414 @@
         background: rgba(56, 189, 248, 0.15);
       }
 
+      /* HITL Alert Animations */
+      .hitl-active-alert {
+        border-color: var(--warn) !important;
+        background: rgba(251, 191, 36, 0.15) !important;
+        color: #fff !important;
+        box-shadow: 0 0 16px rgba(251, 191, 36, 0.3);
+        animation: pulseBorder 1.2s infinite alternate ease-in-out;
+      }
+
+      .btn-pulse {
+        border-color: var(--ok) !important;
+        background: rgba(52, 211, 153, 0.35) !important;
+        box-shadow: 0 0 14px rgba(52, 211, 153, 0.5) !important;
+        animation: pulseButton 1s infinite alternate ease-in-out;
+      }
+
+      @keyframes pulseBorder {
+        from { border-color: rgba(251, 191, 36, 0.3); }
+        to { border-color: rgba(251, 191, 36, 1); }
+      }
+
+      @keyframes pulseButton {
+        from { transform: scale(1); }
+        to { transform: scale(1.02); }
+      }
+
+      /* Tactical Map Legend */
+      #map-legend {
+        position: absolute;
+        top: 20px;
+        right: 20px;
+        z-index: 10;
+        background: var(--panel);
+        border: 1px solid var(--panel-border);
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+        backdrop-filter: blur(12px);
+        padding: 12px 16px;
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        font-size: 10px;
+        letter-spacing: 0.08em;
+      }
+
+      .legend-title {
+        font-size: 9px;
+        font-weight: 700;
+        letter-spacing: 0.16em;
+        color: var(--muted);
+        margin-bottom: 2px;
+      }
+
+      .legend-item {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        color: var(--text);
+      }
+
+      .legend-swatch {
+        width: 14px;
+        height: 4px;
+        border-radius: 1px;
+      }
+
+      /* Downward Gimbal / Thermal Camera (PiP) */
+      #pip-container {
+        position: absolute;
+        bottom: 20px;
+        right: 20px;
+        z-index: 10;
+        width: 290px;
+        background: var(--panel);
+        border: 1px solid var(--panel-border);
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6), inset 0 0 12px rgba(56, 189, 248, 0.05);
+        backdrop-filter: blur(14px);
+        overflow: hidden;
+      }
+
+      .pip-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 6px 10px;
+        background: rgba(16, 26, 42, 0.9);
+        border-bottom: 1px solid rgba(56, 189, 248, 0.15);
+      }
+
+      .pip-title {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 10px;
+        font-weight: 700;
+        letter-spacing: 0.12em;
+        color: #fff;
+      }
+
+      .pip-rec-dot {
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: var(--danger);
+        animation: recBlink 1s infinite alternate;
+      }
+
+      @keyframes recBlink {
+        from { opacity: 0.2; }
+        to { opacity: 1; }
+      }
+
+      .pip-mode-btn {
+        background: rgba(56, 189, 248, 0.15);
+        border: 1px solid var(--accent);
+        color: var(--accent);
+        font-family: var(--font);
+        font-size: 9px;
+        font-weight: 700;
+        padding: 2px 7px;
+        letter-spacing: 0.08em;
+        cursor: pointer;
+        transition: all 0.15s ease;
+      }
+
+      .pip-mode-btn:hover {
+        background: var(--accent);
+        color: #090e17;
+      }
+
+      .pip-viewport {
+        position: relative;
+        width: 290px;
+        height: 175px;
+        background: #000;
+      }
+
+      #pip-canvas {
+        width: 100%;
+        height: 100%;
+        display: block;
+        transition: filter 0.25s ease;
+      }
+
+      .pip-thermal #pip-canvas {
+        filter: contrast(180%) brightness(1.15) hue-rotate(185deg) saturate(320%) invert(85%);
+      }
+
+      .pip-overlay {
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+      }
+
+      .pip-reticle {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: 28px;
+        height: 28px;
+        transform: translate(-50%, -50%);
+        border: 1px solid rgba(56, 189, 248, 0.5);
+        border-radius: 50%;
+      }
+
+      .pip-reticle::before,
+      .pip-reticle::after {
+        content: "";
+        position: absolute;
+        background: rgba(56, 189, 248, 0.7);
+      }
+
+      .pip-reticle::before {
+        top: 50%;
+        left: -6px;
+        right: -6px;
+        height: 1px;
+        transform: translateY(-50%);
+      }
+
+      .pip-reticle::after {
+        left: 50%;
+        top: -6px;
+        bottom: -6px;
+        width: 1px;
+        transform: translateX(-50%);
+      }
+
+      .pip-pitch-tag {
+        position: absolute;
+        top: 6px;
+        left: 8px;
+        font-size: 9px;
+        color: rgba(56, 189, 248, 0.85);
+        letter-spacing: 0.08em;
+        text-shadow: 0 1px 2px #000;
+      }
+
+      .pip-alt-tag {
+        position: absolute;
+        top: 6px;
+        right: 8px;
+        font-size: 9px;
+        color: rgba(56, 189, 248, 0.85);
+        letter-spacing: 0.08em;
+        text-shadow: 0 1px 2px #000;
+      }
+
+      .pip-target-lock {
+        display: none;
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: 76px;
+        height: 76px;
+        transform: translate(-50%, -50%);
+        border: 1.5px dashed var(--danger);
+        box-shadow: 0 0 12px rgba(248, 113, 113, 0.4);
+        animation: targetPulse 0.8s infinite alternate ease-in-out;
+      }
+
+      .pip-target-lock.active {
+        display: flex;
+        align-items: flex-end;
+        justify-content: center;
+      }
+
+      .pip-target-lock span {
+        font-size: 8px;
+        font-weight: 700;
+        background: rgba(248, 113, 113, 0.85);
+        color: #fff;
+        padding: 1px 4px;
+        transform: translateY(14px);
+        letter-spacing: 0.1em;
+      }
+
+      @keyframes targetPulse {
+        from { transform: translate(-50%, -50%) scale(0.95); }
+        to { transform: translate(-50%, -50%) scale(1.08); }
+      }
+
+      .pip-thermal-bar {
+        display: none;
+        position: absolute;
+        bottom: 8px;
+        right: 8px;
+        height: 60px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        font-size: 8px;
+        color: #fff;
+        text-shadow: 0 1px 2px #000;
+      }
+
+      .pip-thermal .pip-thermal-bar {
+        display: flex;
+      }
+
+      .thermal-gradient {
+        width: 6px;
+        flex: 1;
+        margin: 2px 0;
+        background: linear-gradient(to bottom, #ef4444, #f59e0b, #3b82f6, #064e3b);
+        border: 1px solid rgba(255, 255, 255, 0.3);
+      }
+
+      /* Mission Debrief Modal */
+      #debrief-backdrop {
+        position: fixed;
+        inset: 0;
+        z-index: 100;
+        background: rgba(4, 8, 15, 0.82);
+        backdrop-filter: blur(16px);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        opacity: 1;
+        transition: opacity 0.25s ease;
+      }
+
+      #debrief-backdrop.modal-hidden {
+        opacity: 0;
+        pointer-events: none;
+      }
+
+      #debrief-modal {
+        width: 580px;
+        max-width: calc(100vw - 40px);
+        background: rgba(13, 22, 38, 0.95);
+        border: 1px solid var(--ok);
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8), 0 0 28px rgba(52, 211, 153, 0.2);
+        padding: 24px;
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+      }
+
+      .debrief-header {
+        text-align: center;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 4px;
+      }
+
+      .debrief-badge {
+        font-size: 11px;
+        font-weight: 700;
+        background: rgba(52, 211, 153, 0.15);
+        border: 1px solid var(--ok);
+        color: var(--ok);
+        padding: 3px 12px;
+        letter-spacing: 0.18em;
+      }
+
+      .debrief-header h2 {
+        margin: 6px 0 0 0;
+        font-size: 18px;
+        letter-spacing: 0.16em;
+        color: #fff;
+      }
+
+      .debrief-subtitle {
+        margin: 0;
+        font-size: 10px;
+        color: var(--muted);
+        letter-spacing: 0.12em;
+      }
+
+      .debrief-stats-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 10px;
+      }
+
+      .debrief-card {
+        background: rgba(18, 30, 48, 0.75);
+        border: 1px solid rgba(56, 189, 248, 0.15);
+        padding: 10px 12px;
+        display: flex;
+        flex-direction: column;
+        gap: 3px;
+      }
+
+      .debrief-stat-label {
+        font-size: 9px;
+        color: var(--muted);
+        letter-spacing: 0.1em;
+      }
+
+      .debrief-stat-val {
+        font-size: 16px;
+        font-weight: 700;
+        color: #fff;
+      }
+
+      .debrief-triage-summary {
+        background: rgba(18, 30, 48, 0.6);
+        border: 1px solid rgba(56, 189, 248, 0.12);
+        padding: 12px;
+        max-height: 170px;
+        overflow-y: auto;
+      }
+
+      .debrief-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 6px 0;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+        font-size: 11px;
+      }
+
+      .debrief-row:last-child {
+        border-bottom: none;
+      }
+
+      .debrief-actions {
+        display: grid;
+        grid-template-columns: 1.4fr 1fr 0.6fr;
+        gap: 8px;
+        margin-top: 4px;
+      }
+
       canvas {
         display: block;
       }
     </style>
   </head>
   <body>
+    <!-- Tactical Map Legend -->
+    <aside id="map-legend" aria-label="Tactical Map Legend">
+      <div class="legend-title">TACTICAL MAP LEGEND</div>
+      <div class="legend-item"><span class="legend-swatch" style="background: #fbbf24;"></span> UAV Search Grid</div>
+      <div class="legend-item"><span class="legend-swatch" style="background: #f97316;"></span> Rescue Ingress Path</div>
+      <div class="legend-item"><span class="legend-swatch" style="background: #34d399;"></span> Evacuation Exit Route</div>
+      <div class="legend-item"><span class="legend-swatch" style="background: #ef4444;"></span> Fire / Chemical Hazard</div>
+      <div class="legend-item"><span class="legend-swatch" style="background: #0284c7;"></span> Flood / Water Hazard</div>
+    </aside>
+
     <!-- Ground Control Station Overlay -->
     <aside id="gcs-panel" aria-label="SKYERA Ground Control Station">
       <div class="header-title">
         <h1>SKYERA</h1>
         <span class="uav-tag">UAV-01</span>
       </div>
-      <p class="subtitle">3D DISASTER DRONE SIMULATION · PHASE 1</p>
+      <p class="subtitle">URBAN SECTOR 7 · LOCAL SIM · HITL GCS</p>
 
       <!-- Flight Telemetry -->
       <div class="section-label">Flight Telemetry</div>
@@ -305,11 +702,48 @@
         <span class="telemetry-value" id="tele-pos" style="font-size: 13px;">0.0, 0.0, 0.0 · 0°</span>
       </div>
 
+      <div class="section-label">Mission / Search</div>
+      <div class="telemetry-grid">
+        <div class="telemetry-card">
+          <span class="telemetry-label">MISSION PHASE</span>
+          <span class="telemetry-value" id="tele-mission" style="font-size: 12px;">IDLE</span>
+        </div>
+        <div class="telemetry-card">
+          <span class="telemetry-label">GRID SEARCH</span>
+          <span class="telemetry-value" id="tele-search" style="font-size: 12px;">NOT ARMED</span>
+        </div>
+      </div>
+
+      <div class="section-label">Sensor / Detection</div>
+      <div class="telemetry-grid">
+        <div class="telemetry-card">
+          <span class="telemetry-label">FOOTPRINT</span>
+          <span class="telemetry-value" id="tele-sensor">0.0 m</span>
+        </div>
+        <div class="telemetry-card">
+          <span class="telemetry-label">CONTACTS</span>
+          <span class="telemetry-value" id="tele-contacts">0 / 4</span>
+        </div>
+      </div>
+      <div class="telemetry-card" id="tele-contacts-list" style="font-size: 11px; color: var(--muted); min-height: 48px;">
+        NO CONTACTS — START GRID SEARCH TO SCAN
+      </div>
+
+      <div class="section-label">HITL — Human Decision</div>
+      <div class="telemetry-card" id="tele-hitl" style="font-size: 11px; color: var(--muted); min-height: 56px; line-height: 1.45;">
+        NO PENDING CASE — AI RECOMMENDS ONLY
+      </div>
+      <div class="actions-container">
+        <button class="btn btn-primary" id="btn-approve">✓ APPROVE ROUTES</button>
+        <button class="btn btn-danger" id="btn-reject">✕ REJECT</button>
+        <button class="btn" id="btn-false-pos" style="grid-column: span 2;">MARK FALSE POSITIVE</button>
+      </div>
+
       <!-- Flight Actions -->
       <div class="section-label">Operator Flight Controls</div>
       <div class="actions-container">
         <button class="btn btn-primary" id="btn-takeoff">▲ TAKEOFF (8m)</button>
-        <button class="btn" id="btn-patrol">◈ PATROL WAYPOINTS</button>
+        <button class="btn" id="btn-patrol">◈ GRID SEARCH</button>
         <button class="btn" id="btn-land">▼ RETURN & LAND</button>
         <button class="btn btn-danger" id="btn-arm">⚡ ARM / DISARM</button>
       </div>
@@ -319,6 +753,74 @@
     <div id="nav-hint">
       <span>🖱 Orbit: Left Click Drag &nbsp;|&nbsp; Pan: Right Click Drag &nbsp;|&nbsp; Zoom: Scroll Wheel</span>
       <button id="btn-reset-cam">Reset View</button>
+    </div>
+
+    <!-- Downward Gimbal / Thermal Camera Feed (PiP) -->
+    <section id="pip-container" aria-label="UAV Downward Gimbal Camera">
+      <div class="pip-header">
+        <div class="pip-title">
+          <span class="pip-rec-dot"></span>
+          <span>UAV-01 GIMBAL CAM</span>
+        </div>
+        <button class="pip-mode-btn" id="btn-pip-mode">THERMAL IR</button>
+      </div>
+      <div class="pip-viewport">
+        <canvas id="pip-canvas" width="290" height="175"></canvas>
+        <div class="pip-overlay">
+          <div class="pip-reticle"></div>
+          <div class="pip-pitch-tag">GIMBAL: -90.0° NADIR</div>
+          <div class="pip-alt-tag" id="pip-alt-val">ALT: 0.0m</div>
+          <div class="pip-target-lock" id="pip-target-box">
+            <span id="pip-target-label">TARGET ACQUIRED</span>
+          </div>
+          <div class="pip-thermal-bar" id="pip-thermal-legend">
+            <span>38°C</span>
+            <div class="thermal-gradient"></div>
+            <span>18°C</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Mission Debrief Modal -->
+    <div id="debrief-backdrop" class="modal-hidden">
+      <div id="debrief-modal" role="dialog" aria-modal="true" aria-labelledby="debrief-title">
+        <div class="debrief-header">
+          <div class="debrief-badge">MISSION COMPLETE</div>
+          <h2 id="debrief-title">SECTOR 7 DISASTER RESPONSE DEBRIEF</h2>
+          <p class="debrief-subtitle">ALL DETECTED CASUALTIES SECURED & EVACUATED</p>
+        </div>
+        
+        <div class="debrief-stats-grid">
+          <div class="debrief-card">
+            <span class="debrief-stat-label">TOTAL MISSION TIME</span>
+            <span class="debrief-stat-val" id="debrief-time">00:00</span>
+          </div>
+          <div class="debrief-card">
+            <span class="debrief-stat-label">BATTERY CONSUMED</span>
+            <span class="debrief-stat-val" id="debrief-battery">0%</span>
+          </div>
+          <div class="debrief-card">
+            <span class="debrief-stat-label">CASUALTIES RESOLVED</span>
+            <span class="debrief-stat-val" id="debrief-casualties">0 / 4</span>
+          </div>
+          <div class="debrief-card">
+            <span class="debrief-stat-label">HAZARDS AVOIDED</span>
+            <span class="debrief-stat-val">3 / 3 (100% CLEAR)</span>
+          </div>
+        </div>
+
+        <div class="debrief-triage-summary">
+          <div class="section-label">Triage & Route Execution Summary</div>
+          <div id="debrief-records-list"></div>
+        </div>
+
+        <div class="debrief-actions">
+          <button class="btn btn-primary" id="btn-export-debrief">📥 EXPORT LOG (JSON)</button>
+          <button class="btn" id="btn-reset-sim">⟲ RESET SIM</button>
+          <button class="btn" id="btn-close-debrief">✕ CLOSE</button>
+        </div>
+      </div>
     </div>
 
     <!-- 3D Three.js Viewport Host -->

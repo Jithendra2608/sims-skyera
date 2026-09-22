@@ -190,6 +190,31 @@ export function createDroneMesh(): DroneVisualHandle {
     });
   });
 
+  const sensorFootprintMaterial = new MeshBasicMaterial({
+    color: 0x22d3ee,
+    transparent: true,
+    opacity: 0.18,
+    side: DoubleSide,
+  });
+  const sensorFootprint = new Mesh(
+    new CircleGeometry(1, 48),
+    sensorFootprintMaterial,
+  );
+  sensorFootprint.rotation.x = -Math.PI / 2;
+  sensorFootprint.visible = false;
+  root.add(sensorFootprint);
+
+  const sensorRingMaterial = new MeshBasicMaterial({
+    color: 0x67e8f9,
+    transparent: true,
+    opacity: 0.7,
+    side: DoubleSide,
+  });
+  const sensorRing = new Mesh(new RingGeometry(0.95, 1.05, 48), sensorRingMaterial);
+  sensorRing.rotation.x = -Math.PI / 2;
+  sensorRing.visible = false;
+  root.add(sensorRing);
+
   // Ground Projection Marker (shows hover point & altitude on ground)
   const groundProjection = new Group();
   root.add(groundProjection);
@@ -249,6 +274,19 @@ export function createDroneMesh(): DroneVisualHandle {
         });
       }
 
+      const sensorRadius = state.sensorGroundRadius;
+      if (sensorRadius > 0.4) {
+        sensorFootprint.visible = true;
+        sensorRing.visible = true;
+        sensorFootprint.scale.set(sensorRadius, sensorRadius, 1);
+        sensorRing.scale.set(sensorRadius, sensorRadius, 1);
+        sensorFootprint.position.set(0, -state.position.y + 0.04, 0);
+        sensorRing.position.set(0, -state.position.y + 0.05, 0);
+      } else {
+        sensorFootprint.visible = false;
+        sensorRing.visible = false;
+      }
+
       // Ground projection: place ring directly beneath drone on ground plane (y=0)
       groundProjection.position.set(0, -state.position.y, 0);
       const currentAltitude = Math.max(0, state.position.y);
@@ -273,6 +311,8 @@ export function createDroneMesh(): DroneVisualHandle {
       rotorBlurMaterial.dispose();
       skidMaterial.dispose();
       altLineMat.dispose();
+      sensorFootprintMaterial.dispose();
+      sensorRingMaterial.dispose();
     },
   };
 }
