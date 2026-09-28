@@ -215,6 +215,65 @@ export function createDroneMesh(): DroneVisualHandle {
   sensorRing.visible = false;
   root.add(sensorRing);
 
+  // Scanning overlay effects for disaster zones
+  const scanningGroup = new Group();
+  root.add(scanningGroup);
+
+  // Thermal highlight shader effect (cone projecting downward)
+  const thermalConeMaterial = new MeshBasicMaterial({
+    color: 0xff6b35,
+    transparent: true,
+    opacity: 0.15,
+    side: DoubleSide,
+  });
+  const thermalCone = new Mesh(
+    new CylinderGeometry(0.1, 8, 12, 16, 1, true),
+    thermalConeMaterial,
+  );
+  thermalCone.rotation.x = Math.PI;
+  thermalCone.position.y = -6;
+  thermalCone.visible = false;
+  scanningGroup.add(thermalCone);
+
+  // Downward laser grid (scanning pattern)
+  const laserGridMaterial = new MeshBasicMaterial({
+    color: 0x00ff88,
+    transparent: true,
+    opacity: 0.3,
+    wireframe: true,
+  });
+  const laserGrid = new Mesh(
+    new CylinderGeometry(6, 6, 0.1, 8, 4, true),
+    laserGridMaterial,
+  );
+  laserGrid.rotation.x = Math.PI / 2;
+  laserGrid.position.y = -0.05;
+  laserGrid.visible = false;
+  scanningGroup.add(laserGrid);
+
+  // Target bounding boxes (multiple boxes for scanning effect)
+  const boundingBoxMaterial = new MeshBasicMaterial({
+    color: 0xff3366,
+    transparent: true,
+    opacity: 0.4,
+    wireframe: true,
+  });
+  const boundingBoxes: Mesh[] = [];
+  for (let i = 0; i < 4; i++) {
+    const box = new Mesh(
+      new BoxGeometry(1.5, 0.8, 1.2),
+      boundingBoxMaterial,
+    );
+    box.position.set(
+      (Math.random() - 0.5) * 4,
+      -Math.random() * 2 - 0.5,
+      (Math.random() - 0.5) * 4,
+    );
+    box.visible = false;
+    scanningGroup.add(box);
+    boundingBoxes.push(box);
+  }
+
   // Ground Projection Marker (shows hover point & altitude on ground)
   const groundProjection = new Group();
   root.add(groundProjection);
@@ -243,6 +302,7 @@ export function createDroneMesh(): DroneVisualHandle {
   groundProjection.add(altLine);
 
   let rotorAngle = 0;
+  let scanAnimationTime = 0;
 
   return {
     root,
@@ -287,6 +347,39 @@ export function createDroneMesh(): DroneVisualHandle {
         sensorRing.visible = false;
       }
 
+      // Scanning overlay effects when over disaster zones or in scanning mode
+      scanAnimationTime += delta;
+      const isInDisasterZone = state.position.z > 30 && state.position.z < 60; // Earthquake zone
+      const isScanning = state.flightMode === "NAVIGATING" || state.flightMode === "HOVER";
+
+      if (isInDisasterZone && isScanning && state.position.y > 5) {
+        scanningGroup.visible = true;
+        thermalCone.visible = true;
+        laserGrid.visible = true;
+
+        // Animate thermal cone pulsing
+        const pulse = (Math.sin(scanAnimationTime * 4) + 1) * 0.5;
+        thermalConeMaterial.opacity = 0.1 + pulse * 0.15;
+        thermalCone.scale.set(1 + pulse * 0.2, 1, 1 + pulse * 0.2);
+
+        // Animate laser grid rotation
+        laserGrid.rotation.y += delta * 2;
+        laserGridMaterial.opacity = 0.2 + Math.sin(scanAnimationTime * 6) * 0.15;
+
+        // Animate bounding boxes
+        boundingBoxes.forEach((box, idx) => {
+          box.visible = true;
+          box.rotation.y += delta * (idx % 2 === 0 ? 1 : -1);
+          box.position.y = -state.position.y + Math.sin(scanAnimationTime * 3 + idx) * 0.5;
+          boundingBoxMaterial.opacity = 0.3 + Math.sin(scanAnimationTime * 5 + idx) * 0.2;
+        });
+      } else {
+        scanningGroup.visible = false;
+        thermalCone.visible = false;
+        laserGrid.visible = false;
+        boundingBoxes.forEach(box => box.visible = false);
+      }
+
       // Ground projection: place ring directly beneath drone on ground plane (y=0)
       groundProjection.position.set(0, -state.position.y, 0);
       const currentAltitude = Math.max(0, state.position.y);
@@ -313,6 +406,9 @@ export function createDroneMesh(): DroneVisualHandle {
       altLineMat.dispose();
       sensorFootprintMaterial.dispose();
       sensorRingMaterial.dispose();
+      thermalConeMaterial.dispose();
+      laserGridMaterial.dispose();
+      boundingBoxMaterial.dispose();
     },
   };
 }

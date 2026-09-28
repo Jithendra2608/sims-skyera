@@ -18,15 +18,27 @@ export interface LawnmowerSearchParams {
   readonly laneSpacing: number;
 }
 
-/** Operational box covering Urban Sector 7 hazards and survivor placements. */
+export const DEFAULT_SEARCH_ALTITUDE = 18; // Specified 15–20 m AGL
+
+/**
+ * Ingress transit waypoint for the TRANSIT_100M phase.
+ * Represents the transit corridor from staging base (0,0) to Earthquake Zone center.
+ */
+export const TRANSIT_100M_WAYPOINT: SearchWaypoint = {
+  x: 0,
+  y: DEFAULT_SEARCH_ALTITUDE,
+  z: 45, // Center of earthquake zone
+};
+
+/** Operational box centered on Earthquake Zone at 15–20 m AGL. */
 export const SECTOR7_SEARCH_BOX = {
-  minX: -26,
-  maxX: 26,
-  minZ: -26,
-  maxZ: 26,
-  altitude: 8,
-  /** Slightly under 2× sensor radius at 8 m AGL / 60° FOV (~4.6 m radius). */
-  laneSpacing: 7,
+  minX: -15,
+  maxX: 15,
+  minZ: 30, // Earthquake zone starts at Z=30
+  maxZ: 60, // Earthquake zone ends at Z=60
+  altitude: DEFAULT_SEARCH_ALTITUDE,
+  /** Optimal coverage: at 18m AGL / 60° FOV, ground footprint diameter is ~20.8m. 14m gives 33% lateral overlap. */
+  laneSpacing: 14,
 } as const satisfies LawnmowerSearchParams;
 
 function laneCoordinates(
