@@ -86,7 +86,7 @@ const SECTOR_7_SCENARIO: ScenarioData = {
   id: "SECTOR_7",
   name: "Sector 7 Disaster Response Zone",
   stagingBase: { position: { x: 0, y: 0, z: 0 }, radius: 6 },
-  evacuationZone: { x: 6, z: 38 },
+  evacuationZone: { x: -8, z: -12 },
   hazards: [
     {
       id: "HZ-EARTHQUAKE",
@@ -1088,7 +1088,7 @@ export function createSimulationCore(
           y: 0,
           z: nextRover.position.z,
         },
-        speed: 6.5,
+        speed: 10.0,
         targetSurvivorId: survivorId,
         phase: "TRANSIT_TO_CASUALTY",
         routeIndex: 0,
@@ -1141,7 +1141,9 @@ export function createSimulationCore(
     const dz = currentWp.z - rover.position.z;
     const dist = Math.hypot(dx, dz);
 
-    if (dist < 0.6) {
+    // Check if we've reached the current waypoint
+    if (dist < 1.0) {
+      // Move to next waypoint if available
       if (rover.routeIndex + 1 < rover.currentRoute.length) {
         snapshot = {
           ...snapshot,
@@ -1267,6 +1269,7 @@ export function createSimulationCore(
         }
       }
     } else {
+      // Move towards current waypoint
       const heading = Math.atan2(dx, dz);
       const stepDist = Math.min(dist, rover.speed * FIXED_DELTA_SECONDS);
       snapshot = {
