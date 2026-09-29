@@ -6,6 +6,7 @@
 import { createLocalSimulationAdapter } from "./adapters/local/localSimulationAdapter";
 import { mountPresentation } from "./presentation/mountPresentation";
 import { createSimulationCore } from "./simulation/createSimulationCore";
+import type { DisasterScenarioType } from "./simulation/types";
 
 const adapter = createLocalSimulationAdapter();
 const core = createSimulationCore(adapter);
@@ -137,8 +138,12 @@ function updateTelemetryUI(): void {
   const pending = snapshot.mission.cases.find((c) => c.status === "PENDING");
   const btnApprove = document.querySelector<HTMLButtonElement>("#btn-approve");
   if (teleHitl) {
-    if (snapshot.mission.inspect) {
-      teleHitl.textContent = `INSPECTING ${snapshot.mission.inspect.survivorId} · RGB+THERMAL HOLD`;
+    if (snapshot.mission.phase === "DETECT") {
+      teleHitl.textContent = `OPTICAL DETECT: ${snapshot.mission.inspect?.survivorId ?? "CANDIDATE"} · TRANSITING FOR THERMAL OVERHEAD HOLD`;
+      teleHitl.classList.remove("hitl-active-alert");
+      btnApprove?.classList.remove("btn-pulse");
+    } else if (snapshot.mission.phase === "THERMAL_CONFIRM") {
+      teleHitl.textContent = `THERMAL CONFIRM: ${snapshot.mission.inspect?.survivorId ?? "CANDIDATE"} · FLIR IR SENSOR FUSION IN PROGRESS`;
       teleHitl.classList.remove("hitl-active-alert");
       btnApprove?.classList.remove("btn-pulse");
     } else if (!pending) {
@@ -170,9 +175,28 @@ function updateTelemetryUI(): void {
     }
   }
 
-  // Trigger Mission Complete Debrief Modal
+  // Trigger Mission Complete Debrief Modal when RTL landed or all casualties evacuated
+  const isMissionComplete =
+    (snapshot.mission.phase === "RTL" && snapshot.drone.flightMode === "LANDED") ||
+    (snapshot.mission.cases.length > 0 &&
+      snapshot.mission.phase === "IDLE" &&
+      snapshot.mission.cases.every((c) => c.status === "RESOLVED"));
+
+  // Visual feedback when drone enters earthquake disaster zone
+  const earthquakeZoneOverlay = document.querySelector<HTMLElement>("#earthquake-zone-overlay");
+  const isInEarthquakeZone = drone.position.z > 30 && drone.position.z < 60;
+  if (earthquakeZoneOverlay) {
+    if (isInEarthquakeZone && drone.position.y > 5) {
+      earthquakeZoneOverlay.classList.remove("hidden");
+      earthquakeZoneOverlay.classList.add("active");
+    } else {
+      earthquakeZoneOverlay.classList.add("hidden");
+      earthquakeZoneOverlay.classList.remove("active");
+    }
+  }
+
   if (
-    snapshot.mission.phase === "MISSION_COMPLETE" &&
+    isMissionComplete &&
     debriefBackdrop?.classList.contains("modal-hidden") &&
     !debriefDismissed
   ) {
@@ -201,6 +225,7 @@ btnPipMode?.addEventListener("click", () => {
 
 // Mission Complete Debrief Modal Controls
 const debriefBackdrop = document.querySelector<HTMLElement>("#debrief-backdrop");
+const debriefTitle = document.querySelector<HTMLElement>("#debrief-title");
 const debriefTime = document.querySelector<HTMLElement>("#debrief-time");
 const debriefBattery = document.querySelector<HTMLElement>("#debrief-battery");
 const debriefCasualties = document.querySelector<HTMLElement>("#debrief-casualties");
@@ -213,6 +238,10 @@ let debriefDismissed = false;
 
 function showDebriefModal(snapshot: ReturnType<typeof core.getSnapshot>): void {
   if (!debriefBackdrop) return;
+
+  if (debriefTitle) {
+    debriefTitle.textContent = "SECTOR 7 DISASTER RESPONSE DEBRIEF";
+  }
 
   const totalSec = Math.round(snapshot.clock.elapsedSeconds);
   const mins = Math.floor(totalSec / 60).toString().padStart(2, "0");
@@ -265,9 +294,13 @@ btnResetSim?.addEventListener("click", () => {
 
 btnExportDebrief?.addEventListener("click", () => {
   const snapshot = core.getSnapshot();
+  const isTsunami = snapshot.world.scenarioId === "TSUNAMI";
   const report = {
     missionTitle: "SKYERA Autonomous Drone Disaster Response Debrief",
-    sector: "Sector 7 Urban Industrial Complex",
+    scenario: snapshot.world.scenarioId,
+    sector: isTsunami
+      ? "Sector 4 Coastal Marine Surge"
+      : "Sector 7 Urban Industrial Complex",
     timestamp: new Date().toISOString(),
     telemetry: {
       totalMissionDurationSeconds: snapshot.clock.elapsedSeconds,
@@ -302,6 +335,32 @@ btnExportDebrief?.addEventListener("click", () => {
   a.click();
   URL.revokeObjectURL(url);
 });
+
+// Disaster Scenario Selector Controls
+const btnScenarioEq = document.querySelector<HTMLButtonElement>("#btn-scenario-eq");
+const btnScenarioTs = document.querySelector<HTMLButtonElement>("#btn-scenario-ts");
+const gcsSectorTitle = document.querySelector<HTMLElement>("#gcs-sector-title");
+
+function setScenarioUI(scenario: DisasterScenarioType): void {
+  core.setScenario(scenario);
+  presentation.resetCamera();
+  debriefBackdrop?.classList.add("modal-hidden");
+  debriefDismissed = false;
+
+  if (btnScenarioEq && btnScenarioTs) {
+    btnScenarioEq.classList.toggle("active", scenario === "EARTHQUAKE");
+    btnScenarioTs.classList.toggle("active", scenario === "TSUNAMI");
+  }
+  if (gcsSectorTitle) {
+    gcsSectorTitle.textContent =
+      scenario === "EARTHQUAKE"
+        ? "URBAN SECTOR 7 · LOCAL SIM · HITL GCS"
+        : "COASTAL SECTOR 4 · TSUNAMI SIM · HITL GCS";
+  }
+}
+
+btnScenarioEq?.addEventListener("click", () => setScenarioUI("EARTHQUAKE"));
+btnScenarioTs?.addEventListener("click", () => setScenarioUI("TSUNAMI"));
 
 const btnTakeoff = document.querySelector<HTMLButtonElement>("#btn-takeoff");
 btnTakeoff?.addEventListener("click", () => {

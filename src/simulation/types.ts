@@ -88,11 +88,13 @@ export interface RescueRoverState {
   readonly currentRoute: ReadonlyArray<{ readonly x: number; readonly z: number }>;
 }
 
+export type DisasterScenarioType = "SECTOR_7" | "EARTHQUAKE" | "TSUNAMI";
+
 /**
  * World snapshot containing disaster environment, hazards, and survivors.
  */
 export interface WorldState {
-  readonly scenarioId: string | null;
+  readonly scenarioId: DisasterScenarioType;
   readonly bounds: {
     readonly minX: number;
     readonly maxX: number;
@@ -106,24 +108,13 @@ export interface WorldState {
   readonly rescueRover: RescueRoverState;
 }
 
+import type { MissionStateId } from "../domain/types";
+
 /**
- * Mission phase names reserved for the eventual FSM.
- * No transitions are implemented in the architecture reset.
+ * CDR §8 Flowchart Mission States (PS Compliance):
+ * IDLE → TAKEOFF → TRANSIT_100M → OPTICAL_SCAN → DETECT → THERMAL_CONFIRM → ALERT → RTL
  */
-export type MissionPhase =
-  | "IDLE"
-  | "MISSION_INITIALIZED"
-  | "TAKEOFF"
-  | "SEARCHING"
-  | "ANOMALY_DETECTED"
-  | "INSPECTING"
-  | "CLASSIFYING"
-  | "PRIORITIZED"
-  | "SEARCH_CONTINUING"
-  | "AWAITING_HUMAN_APPROVAL"
-  | "ROUTE_GENERATED"
-  | "RESCUE_ACTIVE"
-  | "MISSION_COMPLETE";
+export type MissionPhase = MissionStateId;
 
 export interface SearchPlanState {
   readonly pattern: "LAWNMOWER";
@@ -164,6 +155,7 @@ export interface SimulationCore {
   /** Advance one fixed step. */
   readonly step: () => void;
   readonly reset: () => void;
+  readonly setScenario: (scenario: DisasterScenarioType) => void;
   /** Flight controls */
   readonly arm: () => void;
   readonly disarm: () => void;

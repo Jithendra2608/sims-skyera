@@ -1,4 +1,5 @@
 import {
+  ACESFilmicToneMapping,
   AmbientLight,
   BufferAttribute,
   BufferGeometry,
@@ -6,8 +7,10 @@ import {
   DirectionalLight,
   FogExp2,
   GridHelper,
+  HemisphereLight,
   Line,
   LineBasicMaterial,
+  PCFSoftShadowMap,
   PerspectiveCamera,
   Scene,
   Vector3,
@@ -35,8 +38,8 @@ export function mountPresentation(
   getSnapshot?: () => SimulationSnapshot,
 ): PresentationHandle {
   const scene = new Scene();
-  scene.background = new Color(0x0a101d);
-  scene.fog = new FogExp2(0x0a101d, 0.009);
+  scene.background = new Color(0x131a26);
+  scene.fog = new FogExp2(0x131a26, 0.007);
 
   const camera = new PerspectiveCamera(
     52,
@@ -44,12 +47,15 @@ export function mountPresentation(
     0.1,
     1000,
   );
-  camera.position.set(14, 10, 16);
+  camera.position.set(24, 18, 28);
 
   const renderer = new WebGLRenderer({ antialias: true, powerPreference: "high-performance" });
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
   renderer.setSize(host.clientWidth, host.clientHeight);
-  renderer.toneMappingExposure = 1.2;
+  renderer.shadowMap.enabled = true;
+  renderer.shadowMap.type = PCFSoftShadowMap;
+  renderer.toneMapping = ACESFilmicToneMapping;
+  renderer.toneMappingExposure = 1.15;
   host.appendChild(renderer.domElement);
 
   // Dedicated downward gimbal camera & PiP renderer
@@ -64,6 +70,7 @@ export function mountPresentation(
     });
     pipRenderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     pipRenderer.setSize(290, 175, false);
+    pipRenderer.toneMapping = ACESFilmicToneMapping;
     pipRenderer.toneMappingExposure = 1.2;
 
     gimbalCamera = new PerspectiveCamera(65, 290 / 175, 0.1, 400);
@@ -75,29 +82,40 @@ export function mountPresentation(
   controls.dampingFactor = 0.08;
   controls.maxPolarAngle = Math.PI / 2 - 0.02; // Prevent camera from going under ground
   controls.minDistance = 2;
-  controls.maxDistance = 140;
-  controls.target.set(0, 1, 0);
+  controls.maxDistance = 160;
+  controls.target.set(0, 1.5, 0);
 
-  // Ambient & Directional Lighting
-  const ambient = new AmbientLight(0x7e94b8, 0.7);
+  // Photorealistic Sun & Atmospheric Sky Lighting
+  const ambient = new AmbientLight(0x64748b, 0.5);
   scene.add(ambient);
 
-  const sun = new DirectionalLight(0xffffff, 1.2);
-  sun.position.set(25, 40, 20);
+  const hemi = new HemisphereLight(0x94a3b8, 0x1e293b, 0.65);
+  scene.add(hemi);
+
+  const sun = new DirectionalLight(0xfff7ed, 1.85);
+  sun.position.set(45, 65, 35);
+  sun.castShadow = true;
+  sun.shadow.mapSize.width = 2048;
+  sun.shadow.mapSize.height = 2048;
+  sun.shadow.camera.near = 5;
+  sun.shadow.camera.far = 160;
+  sun.shadow.camera.left = -65;
+  sun.shadow.camera.right = 65;
+  sun.shadow.camera.top = 65;
+  sun.shadow.camera.bottom = -65;
+  sun.shadow.bias = -0.0004;
   scene.add(sun);
 
-  const fillLight = new DirectionalLight(0x38bdf8, 0.4);
-  fillLight.position.set(-20, 15, -20);
+  const fillLight = new DirectionalLight(0x38bdf8, 0.35);
+  fillLight.position.set(-30, 20, -30);
   scene.add(fillLight);
 
-  // Ground Grids (dual cyber grid)
-  const majorGrid = new GridHelper(120, 30, 0x38bdf8, 0x16243d);
-  majorGrid.position.y = 0;
+  // Ground Tactical Grid Overlay (subtle HUD grid above textured terrain)
+  const majorGrid = new GridHelper(120, 24, 0x38bdf8, 0x1e3a5f);
+  majorGrid.position.y = 0.02;
+  (majorGrid.material as LineBasicMaterial).transparent = true;
+  (majorGrid.material as LineBasicMaterial).opacity = 0.22;
   scene.add(majorGrid);
-
-  const fineGrid = new GridHelper(120, 120, 0x1e3a5f, 0x0f1a2e);
-  fineGrid.position.y = -0.01;
-  scene.add(fineGrid);
 
   const disasterEnvironment = createDisasterEnvironment();
   scene.add(disasterEnvironment.root);

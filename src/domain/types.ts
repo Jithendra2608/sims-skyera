@@ -1,8 +1,26 @@
+import type { FusedDetectionReport } from "./detection/yoloThermalFusion";
 import type { InspectionReport } from "./detection/inspectSensors";
-import type { GroundRoute } from "./routing/planGroundRoutes";
-import type { MissionPhase } from "../simulation/types";
+import type { GroundRoute } from "./routing/astarRouting";
+import type { TriageEvaluation } from "./triage/priorityScore";
 
-/** Priority levels reserved for future triage. */
+/**
+ * CDR §8 Flowchart Mission States (PS Compliance):
+ * IDLE → TAKEOFF → TRANSIT_100M → OPTICAL_SCAN → DETECT → THERMAL_CONFIRM → ALERT → RTL
+ */
+export type MissionStateId =
+  | "IDLE"
+  | "TAKEOFF"
+  | "TRANSIT_100M"
+  | "OPTICAL_SCAN"
+  | "DETECT"
+  | "THERMAL_CONFIRM"
+  | "ALERT"
+  | "RTL";
+
+/** Backward-compatible alias for simulation layer */
+export type MissionPhase = MissionStateId;
+
+/** Priority levels for triage. */
 export type SurvivorPriority = "P1" | "P2" | "P3" | "UNCLASSIFIED";
 
 /**
@@ -38,16 +56,15 @@ export interface RouteRecommendation {
 export interface HitlCase {
   readonly survivorId: string;
   readonly report: InspectionReport;
+  readonly fusion?: FusedDetectionReport;
+  readonly triageEval?: TriageEvaluation;
   readonly rescue: GroundRoute;
   readonly evacuation: GroundRoute;
   readonly status: Exclude<OperatorCaseStatus, "NONE">;
 }
 
-/**
- * Placeholder domain façade — intentionally empty behavior.
- */
 export interface MissionDomain {
-  readonly getPhase: () => MissionPhase;
+  readonly getPhase: () => MissionStateId;
 }
 
 export function createMissionDomainPlaceholder(): MissionDomain {

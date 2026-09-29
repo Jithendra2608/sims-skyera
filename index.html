@@ -289,6 +289,55 @@
         to { transform: scale(1.02); }
       }
 
+      /* Scenario Selector */
+      .scenario-selector-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+        margin-bottom: 2px;
+      }
+
+      .btn-scenario {
+        padding: 8px 10px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 11px;
+        letter-spacing: 0.08em;
+        text-align: left;
+        background: rgba(16, 26, 42, 0.7);
+        border: 1px solid rgba(56, 189, 248, 0.2);
+        color: var(--muted);
+        cursor: pointer;
+        transition: all 0.2s ease;
+      }
+
+      .btn-scenario:hover {
+        background: rgba(56, 189, 248, 0.14);
+        color: #fff;
+        border-color: var(--accent);
+      }
+
+      .btn-scenario.active {
+        background: rgba(56, 189, 248, 0.22);
+        border-color: var(--accent);
+        color: #fff;
+        box-shadow: 0 0 14px rgba(56, 189, 248, 0.35);
+        font-weight: 700;
+      }
+
+      .scenario-icon {
+        font-size: 16px;
+      }
+
+      .scenario-text small {
+        font-size: 8px;
+        opacity: 0.75;
+        display: block;
+        letter-spacing: 0.04em;
+        font-weight: 400;
+      }
+
       /* Tactical Map Legend */
       #map-legend {
         position: absolute;
@@ -648,6 +697,50 @@
         margin-top: 4px;
       }
 
+      /* Earthquake Zone Overlay */
+      #earthquake-zone-overlay {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        z-index: 5;
+        background: rgba(239, 68, 68, 0.15);
+        border: 2px solid rgba(239, 68, 68, 0.6);
+        padding: 12px 20px;
+        border-radius: 8px;
+        font-size: 12px;
+        font-weight: 700;
+        letter-spacing: 0.12em;
+        color: #fff;
+        text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+        pointer-events: none;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      #earthquake-zone-overlay.hidden {
+        opacity: 0;
+        transform: translate(-50%, -50%) scale(0.9);
+      }
+
+      #earthquake-zone-overlay.active {
+        opacity: 1;
+        transform: translate(-50%, -50%) scale(1);
+        box-shadow: 0 0 24px rgba(239, 68, 68, 0.4);
+        animation: zonePulse 2s infinite alternate ease-in-out;
+      }
+
+      @keyframes zonePulse {
+        from { box-shadow: 0 0 20px rgba(239, 68, 68, 0.3); }
+        to { box-shadow: 0 0 32px rgba(239, 68, 68, 0.6); }
+      }
+
+      .zone-icon {
+        font-size: 18px;
+      }
+
       canvas {
         display: block;
       }
@@ -662,7 +755,14 @@
       <div class="legend-item"><span class="legend-swatch" style="background: #34d399;"></span> Evacuation Exit Route</div>
       <div class="legend-item"><span class="legend-swatch" style="background: #ef4444;"></span> Fire / Chemical Hazard</div>
       <div class="legend-item"><span class="legend-swatch" style="background: #0284c7;"></span> Flood / Water Hazard</div>
+      <div class="legend-item"><span class="legend-swatch" style="background: #a16207;"></span> Earthquake Zone</div>
     </aside>
+
+    <!-- Earthquake Zone Overlay -->
+    <div id="earthquake-zone-overlay" class="hidden">
+      <span class="zone-icon">⚠️</span>
+      <span>EARTHQUAKE DISASTER ZONE - SCANNING FOR TRAPPED SURVIVORS</span>
+    </div>
 
     <!-- Ground Control Station Overlay -->
     <aside id="gcs-panel" aria-label="SKYERA Ground Control Station">
@@ -670,7 +770,19 @@
         <h1>SKYERA</h1>
         <span class="uav-tag">UAV-01</span>
       </div>
-      <p class="subtitle">URBAN SECTOR 7 · LOCAL SIM · HITL GCS</p>
+      <p class="subtitle" id="gcs-sector-title">URBAN SECTOR 7 · LOCAL SIM · HITL GCS</p>
+
+      <!-- Operational Area -->
+      <div class="section-label">Operational Area</div>
+      <div style="padding: 10px 14px; background: rgba(15, 23, 42, 0.6); border: 1px solid rgba(56, 189, 248, 0.25); border-radius: 8px; margin-bottom: 14px; font-size: 11px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+          <span style="font-weight: 700; color: #38bdf8; letter-spacing: 0.04em;">SECTOR 7 + EARTHQUAKE ZONE</span>
+          <span style="background: rgba(239, 68, 68, 0.2); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.4); padding: 1px 6px; border-radius: 4px; font-size: 10px; font-weight: 600;">ACTIVE SAR</span>
+        </div>
+        <div style="color: #94a3b8; font-size: 10.5px; line-height: 1.35;">
+          Corridor: 15–20m AGL · Multi-hazard Structural Ruin · Earthquake Zone · Autonav Enabled
+        </div>
+      </div>
 
       <!-- Flight Telemetry -->
       <div class="section-label">Flight Telemetry</div>
@@ -802,11 +914,11 @@
           </div>
           <div class="debrief-card">
             <span class="debrief-stat-label">CASUALTIES RESOLVED</span>
-            <span class="debrief-stat-val" id="debrief-casualties">0 / 4</span>
+            <span class="debrief-stat-val" id="debrief-casualties">0 / 5</span>
           </div>
           <div class="debrief-card">
             <span class="debrief-stat-label">HAZARDS AVOIDED</span>
-            <span class="debrief-stat-val">3 / 3 (100% CLEAR)</span>
+            <span class="debrief-stat-val">1 / 1 (100% CLEAR)</span>
           </div>
         </div>
 
