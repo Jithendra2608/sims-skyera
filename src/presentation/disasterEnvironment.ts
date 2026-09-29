@@ -1,7 +1,5 @@
 import {
   BoxGeometry,
-  BufferAttribute,
-  BufferGeometry,
   CanvasTexture,
   CircleGeometry,
   CylinderGeometry,
@@ -11,8 +9,6 @@ import {
   MeshBasicMaterial,
   MeshStandardMaterial,
   PlaneGeometry,
-  Points,
-  PointsMaterial,
   RingGeometry,
   SphereGeometry,
 } from "three";
@@ -179,9 +175,9 @@ function createRealisticGroundTexture(): CanvasTexture {
   ctx.fillRect(padCenterX + 12, padCenterY - hH / 2, hW, hH);
   ctx.fillRect(padCenterX - 22, padCenterY - 5, 44, 10);
 
-  // 6. Evacuation Base Zone (X = -6m, Z = 38m)
-  const evacCenterX = toPx(-6);
-  const evacCenterY = toPx(38);
+  // 6. Evacuation Base Zone (X = -8m, Z = -12m) - Safe zone outside disaster area
+  const evacCenterX = toPx(-8);
+  const evacCenterY = toPx(-12);
   const evacRadiusPx = 3.6 * 12.8;
 
   ctx.beginPath();
@@ -691,51 +687,7 @@ export function createDisasterEnvironment(): DisasterEnvironmentHandle {
     earthquakeZoneGroup.add(trappedGroup);
   });
 
-  // 7. Atmospheric Dust & Smoke Particle Systems (Enhanced for earthquake zone)
-  const PARTICLE_COUNT = 280;
-  const particlePositions = new Float32Array(PARTICLE_COUNT * 3);
-  const particleVelocities: { x: number; y: number; z: number; resetY: number }[] = [];
-
-  for (let i = 0; i < PARTICLE_COUNT; i++) {
-    // Distribute particles across multiple hazard zones including earthquake zone
-    let cluster;
-    if (i < 80) {
-      // Earthquake zone particles (background)
-      cluster = { x: earthquakeZoneCenter.x, z: earthquakeZoneCenter.z };
-    } else if (i < 180) {
-      // Eastern fire hazard and western collapse
-      cluster = i % 2 === 0 ? { x: 18, z: -16 } : { x: -14, z: 15 };
-    } else {
-      // Random spread across disaster area
-      cluster = { x: (rng() - 0.5) * 40, z: (rng() - 0.5) * 40 };
-    }
-
-    const px = cluster.x + (rng() - 0.5) * 15;
-    const py = 0.5 + rng() * 10;
-    const pz = cluster.z + (rng() - 0.5) * 15;
-
-    particlePositions[i * 3] = px;
-    particlePositions[i * 3 + 1] = py;
-    particlePositions[i * 3 + 2] = pz;
-
-    particleVelocities.push({
-      x: (rng() - 0.5) * 0.25,
-      y: 0.3 + rng() * 0.6,
-      z: (rng() - 0.5) * 0.25,
-      resetY: 0.5 + rng() * 2.0,
-    });
-  }
-
-  const particleGeom = new BufferGeometry();
-  particleGeom.setAttribute("position", new BufferAttribute(particlePositions, 3));
-  const particleMat = new PointsMaterial({
-    color: 0x94a3b8,
-    size: 1.4,
-    transparent: true,
-    opacity: 0.4,
-  });
-  const smokeParticles = new Points(particleGeom, particleMat);
-  root.add(smokeParticles);
+  // 7. Atmospheric Dust & Smoke Particle Systems (Removed - was Enhanced for earthquake zone)
 
   // 7. Tsunami / Coastal Surge Scenario 3D Assets
   const tsunamiGroup = new Group();
@@ -1105,33 +1057,7 @@ export function createDisasterEnvironment(): DisasterEnvironmentHandle {
     update: (world: WorldState, delta: number) => {
       pulseTimer += delta;
 
-      // Animate smoke & dust particles
-      const posAttr = smokeParticles.geometry.getAttribute("position") as BufferAttribute;
-      const positions = posAttr.array as Float32Array;
-      for (let i = 0; i < PARTICLE_COUNT; i++) {
-        const vel = particleVelocities[i];
-        positions[i * 3] += vel.x * delta;
-        positions[i * 3 + 1] += vel.y * delta;
-        positions[i * 3 + 2] += vel.z * delta;
-
-        if (positions[i * 3 + 1] > 16.0) {
-          let cluster;
-          if (i < 80) {
-            // Reset to earthquake zone
-            cluster = { x: earthquakeZoneCenter.x, z: earthquakeZoneCenter.z };
-          } else if (i < 180) {
-            // Reset to fire/collapse zones
-            cluster = i % 2 === 0 ? { x: 18, z: -16 } : { x: -14, z: 15 };
-          } else {
-            // Random spread
-            cluster = { x: (rng() - 0.5) * 40, z: (rng() - 0.5) * 40 };
-          }
-          positions[i * 3] = cluster.x + (rng() - 0.5) * 12;
-          positions[i * 3 + 1] = vel.resetY;
-          positions[i * 3 + 2] = cluster.z + (rng() - 0.5) * 12;
-        }
-      }
-      posAttr.needsUpdate = true;
+      // Animate smoke & dust particles (Removed)
 
       // Scenario dynamic visibility
       const isTsunami = world.scenarioId === "TSUNAMI";
@@ -1216,8 +1142,6 @@ export function createDisasterEnvironment(): DisasterEnvironmentHandle {
       rebarMaterial.dispose();
       glassWindowMaterial.dispose();
       waterMaterial.dispose();
-      particleGeom.dispose();
-      particleMat.dispose();
     },
   };
 }

@@ -21,7 +21,7 @@ export interface GroundRoute {
   readonly distanceMeters: number;
 }
 
-const DEFAULT_HAZARD_BUFFER = 3.5;
+const DEFAULT_HAZARD_BUFFER = 2.0;
 const GRID_CELL_SIZE = 1.0; // 1 meter grid resolution
 
 function dist(a: GroundPoint, b: GroundPoint): number {
